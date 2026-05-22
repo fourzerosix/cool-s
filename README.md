@@ -15,10 +15,10 @@ Universal S, Super S, Pointy S, or Graffiti S), the graffiti symbol every
    //      ||      \\
    ||      ||      ||
    ||      ||      ||
-   ##      \\      ##
-   ##\\\    \\\   ##
-   ##  \\\   \\\ ##
-   ##    \\\   \###
+   ||      \\      ||
+   ||\\      \\\   ||
+   ||  \\\    \\\ ||
+   ||    \\\   \\ ||
    ||      ||      ||
    ||      ||      ||
    \\      ||      //
@@ -29,18 +29,19 @@ Universal S, Super S, Pointy S, or Graffiti S), the graffiti symbol every
 ```
 
 The Cool S is constructed in 7 stages, each rendered in a distinct color,
-with spark particles flying from the tip of each line as it's drawn.
+with spark particles flying from the tip of each line as it is drawn.
 
 ---
 
 ## Features
 
-- 🎨 **7-stage animated construction** with color-coded segments
-- ✨ **Spark particle effect** at each drawing step
-- 🌈 **Rainbow finale mode** (`-r`)
-- 📐 **Scalable** — render it tiny or enormous (`-s 1` through `-s 8`)
-- 🚀 **Fast mode** — instant render, no animation (`-f`)
-- 🖤 **Plain/no-color mode** for redirecting or piping output
+- 7-stage animated construction with color-coded segments
+- Spark particle effect at each drawing step
+- Rainbow finale mode (`-r`)
+- Scalable — render it tiny or enormous (`-s 1` through `-s 8`)
+- Fast mode — instant render, no animation (`-f`)
+- Plain/no-color mode for redirecting or piping output
+- Auto-centers in your terminal regardless of window size
 - Zero dependencies beyond libc
 
 ---
@@ -93,9 +94,9 @@ gcc -O2 -o cool-s src/cool-s.c -lm
 cool-s [OPTIONS]
 
 Options:
-  -f            Fast mode — skip animation, instant render
+  -f            Fast mode -- skip animation, instant render
   -d USECS      Per-pixel delay in microseconds (default: 25000)
-  -s SCALE      Scale factor 1–8 (default: 4)
+  -s SCALE      Scale factor 1-8 (default: 4)
   -r            Rainbow finale mode
   --no-sparks   Disable spark particles
   --plain       No color output
@@ -119,24 +120,24 @@ cool-s --no-sparks       # No particles
 The Cool S consists of **14 line segments** in **7 steps**, following the
 canonical construction described on [Wikipedia](https://en.wikipedia.org/wiki/Cool_S):
 
-| Stage | What's drawn              | Color   |
-|------:|---------------------------|---------|
-|     1 | Three top vertical bars   | White   |
+| Stage | What is drawn              | Color   |
+|------:|----------------------------|---------|
+|     1 | Three top vertical bars    | White   |
 |     2 | Three bottom vertical bars | White   |
-|     3 | Two diagonal connectors   | Cyan    |
-|     4 | Top inverted-V cap        | Yellow  |
-|     5 | Bottom V base             | Green   |
-|     6 | Left closing connector    | Magenta |
-|     7 | Right closing connector   | Red     |
+|     3 | Two diagonal connectors    | Cyan    |
+|     4 | Top inverted-V cap         | Yellow  |
+|     5 | Bottom V base              | Green   |
+|     6 | Left closing connector     | Magenta |
+|     7 | Right closing connector    | Red     |
 
 ---
 
 ## Platform Support
 
-- **Linux** — full support
-- **macOS** — full support (tested on macOS 13+)
-- **WSL / Windows Terminal** — works great
-- **Other POSIX** — should work; needs a VT100-compatible terminal
+- **Linux** -- full support
+- **macOS** -- full support (tested on macOS 13+)
+- **WSL / Windows Terminal** -- works great
+- **Other POSIX** -- should work; needs a VT100-compatible terminal
 
 ---
 
@@ -144,7 +145,7 @@ canonical construction described on [Wikipedia](https://en.wikipedia.org/wiki/Co
 
 The Cool S is a piece of [childlore](https://en.wikipedia.org/wiki/Childlore)
 whose origin is unknown but dates to at least the early 1980s. It is one of
-the most universally recognized hand-drawn symbols in the world — yet no one
+the most universally recognized hand-drawn symbols in the world -- yet no one
 knows exactly where it came from.
 
 `cool-s` was written as a tribute to that tiny, pointy act of creativity.
@@ -153,17 +154,14 @@ knows exactly where it came from.
 
 ## Contributing
 
-Bug reports and pull requests are welcome!
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
-# Run the smoke tests
-make check
+make check   # run smoke tests
 ```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT -- see [LICENSE](LICENSE).
