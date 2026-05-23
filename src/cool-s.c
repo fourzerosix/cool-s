@@ -1,21 +1,20 @@
 #define _GNU_SOURCE
 /*
- * cool-s — Draw the legendary "Cool S" (Universal S / Graffiti S) in your terminal.
+ * cool-s  --  Draw the legendary Cool S in your terminal.
  *
- * Inspired by `sl` (steam locomotive), this program animates the step-by-step
- * construction of the Cool S — the graffiti symbol every 90s kid drew in notebooks.
+ * Inspired by `sl` (steam locomotive).  Animates the step-by-step
+ * construction of the Cool S (Universal S / Graffiti S / Super S).
  *
- * The Cool S consists of 14 line segments built in 7 steps:
- *   Step 1: Three short vertical bars (top group)
- *   Step 2: Three short vertical bars (bottom group)
- *   Step 3: Two diagonal connectors crossing the middle
- *   Step 4: Inverted-V cap at the top
- *   Step 5: V base at the bottom
- *   Step 6: Left closing connector  (vertical, same column as left bars)
- *   Step 7: Right closing connector (vertical, same column as right bars)
+ * Geometry: all segments are defined in "square-pixel" coordinates
+ * where x∈[0,4], y∈[0,10].  At render time each sq-pixel is scaled
+ * by `scale`, then x is doubled (×2) to compensate for the ~2:1
+ * terminal character aspect ratio, giving clean 45-degree diagonals.
+ *
+ *   sq-pixel → terminal:  col = sq_x * scale * 2
+ *                          row = sq_y * scale
  *
  * Build:   gcc -O2 -o cool-s src/cool-s.c -lm
- * Usage:   cool-s [-f] [-d DELAY] [-s SCALE] [-r] [--no-sparks] [--plain] [-h]
+ * Usage:   cool-s [-f] [-d USECS] [-s SCALE] [-r] [-o] [--no-sparks] [--plain] [-h]
  */
 
 #include <stdio.h>
@@ -28,55 +27,44 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
-/* ── ANSI helpers ──────────────────────────────────────────────────────────── */
-#define CLEAR_SCREEN  "\033[2J"
-#define CURSOR_HOME   "\033[H"
-#define CURSOR_HIDE   "\033[?25l"
-#define CURSOR_SHOW   "\033[?25h"
-#define RESET         "\033[0m"
-#define BOLD          "\033[1m"
+/* ── ANSI ──────────────────────────────────────────────────────────────────── */
+#define CLEAR   "\033[2J"
+#define HOME    "\033[H"
+#define HIDE    "\033[?25l"
+#define SHOW    "\033[?25h"
+#define RESET   "\033[0m"
+#define BOLD    "\033[1m"
 
-/* One color per drawing stage */
 static const char *STAGE_COLOR[] = {
-    "\033[97m",   /* 1  top bars       — bright white   */
-    "\033[97m",   /* 2  bottom bars    — bright white   */
-    "\033[96m",   /* 3  diagonals      — bright cyan    */
-    "\033[93m",   /* 4  top inv-V      — bright yellow  */
-    "\033[92m",   /* 5  bottom V       — bright green   */
-    "\033[95m",   /* 6  close left     — bright magenta */
-    "\033[91m",   /* 7  close right    — bright red     */
-    "\033[97m",   /* 8  final wash     — bright white   */
+    "\033[97m",   /* 1  top bars      — bright white   */
+    "\033[97m",   /* 2  bottom bars   — bright white   */
+    "\033[96m",   /* 3  diagonals     — bright cyan    */
+    "\033[93m",   /* 4  top V         — bright yellow  */
+    "\033[92m",   /* 5  bottom V      — bright green   */
+    "\033[95m",   /* 6  close left    — bright magenta */
+    "\033[91m",   /* 7  close right   — bright red     */
+    "\033[97m",   /* 8  final         — bright white   */
 };
 #define N_COLORS 8
 
-/* ── Terminal size ─────────────────────────────────────────────────────────── */
-static int g_cols = 80, g_rows = 24;
-
-static void refresh_term_size(void) {
-    struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0) {
-        g_cols = ws.ws_col;
-        g_rows = ws.ws_row;
-    } else {
-        g_cols = 80;
-        g_rows = 24;
-    }
-}
-
-/* ── Canvas — allocated to match terminal size at startup ─────────────────── */
+/* ── Terminal / canvas ─────────────────────────────────────────────────────── */
 #define MAX_W 512
 #define MAX_H 256
 
 typedef struct { char ch; int stage; } Cell;
 static Cell canvas[MAX_H][MAX_W];
-static int  cw, ch_; /* actual canvas dimensions = terminal size */
+static int cw, ch_;   /* actual canvas size = terminal size */
 
-static void canvas_init(void) {
-    refresh_term_size();
-    cw  = g_cols;
-    ch_ = g_rows;
-    if (cw  > MAX_W) cw  = MAX_W;
-    if (ch_ > MAX_H) ch_ = MAX_H;
+static int g_tcols = 80, g_trows = 24;
+
+static void get_term(void) {
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0) {
+        g_tcols = ws.ws_col;
+        g_trows = ws.ws_row;
+    }
+    cw  = g_tcols < MAX_W ? g_tcols : MAX_W;
+    ch_ = g_trows < MAX_H ? g_trows : MAX_H;
 }
 
 static void canvas_clear(void) {
@@ -87,32 +75,23 @@ static void canvas_clear(void) {
         }
 }
 
-static void canvas_put(int x, int y, char c, int stage) {
-    if (x < 0 || x >= cw || y < 0 || y >= ch_) return;
-    canvas[y][x].ch    = c;
-    canvas[y][x].stage = stage;
+static void canvas_put(int col, int row, char ch, int stage) {
+    if (col < 0 || col >= cw || row < 0 || row >= ch_) return;
+    canvas[row][col].ch    = ch;
+    canvas[row][col].stage = stage;
 }
 
-/*
- * Render the canvas to stdout.
- * We print exactly cw-1 characters per row (leave last col to avoid
- * forced line-wrap on terminals that don't have auto-margin off), then \n.
- * We render ch_-1 rows so the last row stays free for the "press key" prompt.
- */
 static void canvas_render(int plain) {
-    printf(CURSOR_HOME);
-    int last_stage = -1;
-    int render_rows = ch_ - 1;   /* keep last row for prompt */
-    int render_cols = cw  - 1;   /* keep last col to avoid wrap */
-
-    for (int y = 0; y < render_rows; y++) {
-        for (int x = 0; x < render_cols; x++) {
+    printf(HOME);
+    int last = -1;
+    for (int y = 0; y < ch_ - 1; y++) {
+        for (int x = 0; x < cw - 1; x++) {
             Cell *c = &canvas[y][x];
-            if (!plain && c->stage != last_stage) {
+            if (!plain && c->stage != last) {
                 printf(RESET);
                 if (c->stage > 0 && c->stage <= N_COLORS)
                     printf(BOLD "%s", STAGE_COLOR[c->stage - 1]);
-                last_stage = c->stage;
+                last = c->stage;
             }
             putchar(c->ch);
         }
@@ -122,69 +101,52 @@ static void canvas_render(int plain) {
     fflush(stdout);
 }
 
-/* ── Bresenham line ────────────────────────────────────────────────────────── */
+/* ── Bresenham in sq-pixel space ───────────────────────────────────────────── */
 /*
- * Coordinates are in "S-units" (canonical 0-2 x, 0-5 y).
- * Terminal mapping:
- *   tx = ox + x_unit * 2 * scale   (×2 compensates for char aspect ratio)
- *   ty = oy + y_unit * scale
+ * x0,y0,x1,y1  are sq-pixel unit coords (e.g. 0..4 × 0..10).
+ * scale multiplies them; then col = sq_x*2, row = sq_y.
+ * ox, oy are terminal-cell offsets for centering.
  */
-static void draw_line(int x0, int y0, int x1, int y1,
-                      int scale, int ox, int oy,
-                      char ch, int stage,
-                      int delay_us, int plain) {
-    int tx0 = ox + x0 * 2 * scale;
-    int ty0 = oy + y0 * scale;
-    int tx1 = ox + x1 * 2 * scale;
-    int ty1 = oy + y1 * scale;
+static void draw_seg(int x0, int y0, int x1, int y1,
+                     int scale, int ox, int oy,
+                     char ch, int stage,
+                     int delay_us, int plain) {
+    int X0 = x0 * scale, Y0 = y0 * scale;
+    int X1 = x1 * scale, Y1 = y1 * scale;
 
-    int dx =  abs(tx1 - tx0), sx = tx0 < tx1 ? 1 : -1;
-    int dy = -abs(ty1 - ty0), sy = ty0 < ty1 ? 1 : -1;
+    int dx =  abs(X1 - X0), sx = X0 < X1 ? 1 : -1;
+    int dy = -abs(Y1 - Y0), sy = Y0 < Y1 ? 1 : -1;
     int err = dx + dy, e2;
 
     for (;;) {
-        canvas_put(tx0, ty0, ch, stage);
+        int col = ox + X0 * 2;   /* ×2 aspect correction */
+        int row = oy + Y0;
+        canvas_put(col,   row, ch, stage);
+        canvas_put(col+1, row, ch, stage); /* 1-col thickness */
         if (delay_us > 0) { canvas_render(plain); usleep(delay_us); }
-        if (tx0 == tx1 && ty0 == ty1) break;
+        if (X0 == X1 && Y0 == Y1) break;
         e2 = 2 * err;
-        if (e2 >= dy) { err += dy; tx0 += sx; }
-        if (e2 <= dx) { err += dx; ty0 += sy; }
-    }
-    /* always do one final thickness pass — one col to the right for diagonals */
-    if (scale >= 2 && tx0 != tx1) {
-        /* already at endpoint; re-walk just for fill */
-    }
-    /* extra thickness: nudge ox+1 and redraw silently */
-    if (scale >= 2) {
-        int ax0 = ox + x0*2*scale + 1, ay0 = oy + y0*scale;
-        int ax1 = ox + x1*2*scale + 1, ay1 = oy + y1*scale;
-        int adx =  abs(ax1-ax0), asx = ax0<ax1?1:-1;
-        int ady = -abs(ay1-ay0), asy = ay0<ay1?1:-1;
-        int aerr = adx+ady, ae2;
-        for(;;){
-            canvas_put(ax0,ay0,ch,stage);
-            if(ax0==ax1&&ay0==ay1) break;
-            ae2=2*aerr;
-            if(ae2>=ady){aerr+=ady;ax0+=asx;}
-            if(ae2<=adx){aerr+=adx;ay0+=asy;}
-        }
+        if (e2 >= dy) { err += dy; X0 += sx; }
+        if (e2 <= dx) { err += dx; Y0 += sy; }
     }
 }
 
-/* ── Spark particles ───────────────────────────────────────────────────────── */
-#define MAX_SPARKS 80
-typedef struct { int x, y, life, stage; char ch; } Spark;
+/* ── Sparks ────────────────────────────────────────────────────────────────── */
+#define MAX_SPARKS 120
+typedef struct { int x, y, vx, vy, life, stage; char ch; } Spark;
 static Spark sparks[MAX_SPARKS];
 static int   n_sparks = 0;
-static const char SPARK_CHARS[] = "*+.`'";
+static const char SCHARS[] = "*+.'`";
 
-static void spark_emit(int x, int y, int stage) {
-    for (int k = 0; k < 5 && n_sparks < MAX_SPARKS; k++, n_sparks++) {
+static void spark_emit(int x, int y, int stage, int count) {
+    for (int k = 0; k < count && n_sparks < MAX_SPARKS; k++, n_sparks++) {
         sparks[n_sparks].x     = x + (rand() % 7) - 3;
         sparks[n_sparks].y     = y + (rand() % 5) - 2;
-        sparks[n_sparks].life  = 2 + rand() % 5;
+        sparks[n_sparks].vx    = (rand() % 3) - 1;
+        sparks[n_sparks].vy    = (rand() % 3) - 2;
+        sparks[n_sparks].life  = 3 + rand() % 5;
         sparks[n_sparks].stage = stage > 0 ? stage : 1;
-        sparks[n_sparks].ch    = SPARK_CHARS[rand() % (sizeof(SPARK_CHARS)-1)];
+        sparks[n_sparks].ch    = SCHARS[rand() % (sizeof(SCHARS) - 1)];
     }
 }
 
@@ -192,9 +154,9 @@ static void sparks_tick(void) {
     for (int i = 0; i < n_sparks; i++) {
         if (sparks[i].life <= 0) continue;
         canvas_put(sparks[i].x, sparks[i].y, ' ', 0);
+        sparks[i].x += sparks[i].vx;
+        sparks[i].y += sparks[i].vy;
         sparks[i].life--;
-        sparks[i].y += (rand() % 3) - 2;
-        sparks[i].x += (rand() % 3) - 1;
         if (sparks[i].life > 0)
             canvas_put(sparks[i].x, sparks[i].y, sparks[i].ch, sparks[i].stage);
     }
@@ -203,69 +165,177 @@ static void sparks_tick(void) {
 /* ── Signal / cleanup ──────────────────────────────────────────────────────── */
 static volatile int g_quit = 0;
 static void on_sigint(int s) { (void)s; g_quit = 1; }
-static void cleanup(void)    { printf(CURSOR_SHOW RESET "\n"); fflush(stdout); }
+static void cleanup(void)    { printf(SHOW RESET "\n"); fflush(stdout); }
 
-
-/* ── Direct terminal-pixel Bresenham (no S-unit scaling) ──────────────────── */
-static void draw_px(int tx0, int ty0, int tx1, int ty1,
-                    char ch, int stage, int delay_us, int plain) {
-    int dx =  abs(tx1-tx0), sx = tx0<tx1 ? 1:-1;
-    int dy = -abs(ty1-ty0), sy = ty0<ty1 ? 1:-1;
-    int err = dx+dy, e2;
-    for (;;) {
-        canvas_put(tx0, ty0, ch, stage);
-        if (delay_us > 0) { canvas_render(plain); usleep(delay_us); }
-        if (tx0==tx1 && ty0==ty1) break;
-        e2 = 2*err;
-        if (e2 >= dy) { err+=dy; tx0+=sx; }
-        if (e2 <= dx) { err+=dx; ty0+=sy; }
-    }
-}
-
-/* ── Cool S geometry ───────────────────────────────────────────────────────── */
+/* ── Cool S segments (sq-pixel unit coords) ────────────────────────────────── */
 /*
- * Canonical Wikipedia coordinates (y-up, x∈[0,2], y∈[0,5]).
- * We flip to terminal y-down: ty = 5 - cy.
- *
- * The 14 segments:
- *   Top bars:      (0,4)→(0,3)   (1,4)→(1,3)   (2,4)→(2,3)
- *   Bottom bars:   (0,2)→(0,1)   (1,2)→(1,1)   (2,2)→(2,1)
- *   Diagonals:     (0,3)→(1,2)   (1,3)→(2,2)
- *   Top inv-V:     (0,4)→(1,5)   (2,4)→(1,5)
- *   Bottom V:      (0,1)→(1,0)   (2,1)→(1,0)
- *   Close left:    (0,2)→(0,3)   ← vertical, fills gap on left column
- *   Close right:   (2,2)→(2,3)   ← vertical, fills gap on right column
+ * sq-pixel space: x∈[0,4], y∈[0,10]
+ * Sections:
+ *   y=2..4  top bars
+ *   y=4..6  diagonal crossing zone
+ *   y=6..8  bottom bars
+ *   y=0..2  top inverted-V
+ *   y=8..10 bottom V
+ *   closing connectors: short diagonals at the bar/diagonal junctions
  */
-#define FLIP(y)  (5-(y))
-
-typedef struct { int x0,y0, x1,y1; char ch; int stage; } Seg;
+typedef struct { int x0,y0,x1,y1; char ch; int stage; } Seg;
 
 static const Seg SEGS[] = {
-    /* Stage 1 — top vertical bars */
-    { 0,FLIP(3), 0,FLIP(4), '|', 1 },
-    { 1,FLIP(3), 1,FLIP(4), '|', 1 },
-    { 2,FLIP(3), 2,FLIP(4), '|', 1 },
-    /* Stage 2 — bottom vertical bars */
-    { 0,FLIP(1), 0,FLIP(2), '|', 2 },
-    { 1,FLIP(1), 1,FLIP(2), '|', 2 },
-    { 2,FLIP(1), 2,FLIP(2), '|', 2 },
-    /* Stage 3 — diagonal connectors */
-    { 0,FLIP(3), 1,FLIP(2), '\\', 3 },
-    { 1,FLIP(3), 2,FLIP(2), '\\', 3 },
-    /* Stage 4 — top inverted-V */
-    { 0,FLIP(4), 1,FLIP(5), '/',  4 },
-    { 2,FLIP(4), 1,FLIP(5), '\\', 4 },
-    /* Stage 5 — bottom V */
-    { 0,FLIP(1), 1,FLIP(0), '\\', 5 },
-    { 2,FLIP(1), 1,FLIP(0), '/',  5 },
-    /* Stages 6 & 7 are drawn separately in draw_cool_s() using
-     * terminal pixel coordinates, because they span fractional S-units. */
+    /* stage 1 — top three vertical bars */
+    { 0,2, 0,4, '|', 1 },
+    { 2,2, 2,4, '|', 1 },
+    { 4,2, 4,4, '|', 1 },
+    /* stage 2 — bottom three vertical bars */
+    { 0,6, 0,8, '|', 2 },
+    { 2,6, 2,8, '|', 2 },
+    { 4,6, 4,8, '|', 2 },
+    /* stage 3 — two diagonal connectors */
+    { 0,4, 2,6, '\\', 3 },
+    { 2,4, 4,6, '\\', 3 },
+    /* stage 4 — top inverted-V */
+    { 0,2, 2,0, '/',  4 },
+    { 4,2, 2,0, '\\', 4 },
+    /* stage 5 — bottom V */
+    { 0,8, 2,10,'\\', 5 },
+    { 4,8, 2,10,'/',  5 },
+    /* stage 6 — left closing diagonal: \ from bottom of top-left-bar inward */
+    { 0,4, 1,5, '\\', 6 },
+    /* stage 7 — right closing diagonal: / from top of bottom-right-bar inward */
+    { 4,6, 3,5, '/',  7 },
 };
 #define N_SEGS (int)(sizeof(SEGS)/sizeof(SEGS[0]))
 
+/* ── Oppenheimer explosion ─────────────────────────────────────────────────── */
+/*
+ * Trinity test, July 16, 1945.
+ * The S shatters outward in a shockwave of particles, then the screen
+ * flashes white, then dims to an ash-grey fallout.
+ */
+#define MAX_DEBRIS 512
+typedef struct {
+    float x, y, vx, vy;
+    int   life, maxlife, stage;
+    char  ch;
+} Debris;
+static Debris debris[MAX_DEBRIS];
+static int    n_debris = 0;
+
+static const char DEBRIS_CHARS[] = "*+.'`|/\\-~^";
+static const char FLASH_CHARS[]  = "#@%$&*O0";
+
+static void oppenheimer(int ox, int oy, int scale, int plain, int delay_us) {
+    /* --- Phase 0: collect all lit pixels as debris seeds --- */
+    n_debris = 0;
+    for (int y = 0; y < ch_; y++) {
+        for (int x = 0; x < cw; x++) {
+            if (canvas[y][x].ch != ' ' && n_debris < MAX_DEBRIS) {
+                float cx = (float)(cw) / 2.0f;
+                float cy = (float)(ch_) / 2.0f;
+                float dx = (float)x - cx;
+                float dy = (float)y - cy;
+                float dist = sqrtf(dx*dx + dy*dy);
+                if (dist < 0.1f) dist = 0.1f;
+                float speed = 0.3f + ((float)rand() / RAND_MAX) * 1.2f;
+                debris[n_debris].x      = (float)x;
+                debris[n_debris].y      = (float)y;
+                debris[n_debris].vx     = (dx / dist) * speed + ((float)rand()/RAND_MAX - 0.5f) * 0.5f;
+                debris[n_debris].vy     = (dy / dist) * speed * 0.5f + ((float)rand()/RAND_MAX - 0.5f) * 0.3f;
+                debris[n_debris].life   = 18 + rand() % 20;
+                debris[n_debris].maxlife= debris[n_debris].life;
+                debris[n_debris].stage  = canvas[y][x].stage;
+                debris[n_debris].ch     = DEBRIS_CHARS[rand() % (sizeof(DEBRIS_CHARS)-1)];
+                n_debris++;
+            }
+        }
+    }
+
+    (void)ox; (void)oy; (void)scale;
+
+    /* --- Phase 1: FLASH — rapidly fill screen bright --- */
+    if (!plain) {
+        for (int flash = 0; flash < 4 && !g_quit; flash++) {
+            canvas_clear();
+            int col = (flash % 2 == 0) ? 8 : N_COLORS;
+            for (int y = 0; y < ch_-1; y++) {
+                for (int x = 0; x < cw-1; x++) {
+                    if ((x + y + flash) % (2 + flash) == 0) {
+                        canvas[y][x].ch    = FLASH_CHARS[rand() % (sizeof(FLASH_CHARS)-1)];
+                        canvas[y][x].stage = col;
+                    }
+                }
+            }
+            canvas_render(plain);
+            usleep(40000);
+        }
+    }
+
+    /* --- Phase 2: shockwave expansion --- */
+    int frames = 40;
+    for (int f = 0; f < frames && !g_quit; f++) {
+        canvas_clear();
+
+        /* shockwave ring */
+        if (!plain) {
+            float radius = (float)f * 1.5f;
+            float cx2 = (float)cw / 2.0f;
+            float cy2 = (float)ch_ / 2.0f;
+            for (int theta = 0; theta < 360; theta += 2) {
+                float rad = (float)theta * 3.14159f / 180.0f;
+                int rx = (int)(cx2 + cosf(rad) * radius * 2.0f);
+                int ry = (int)(cy2 + sinf(rad) * radius);
+                int sc = (f < 8) ? 4 : (f < 16) ? 3 : 2;
+                canvas_put(rx, ry, '*', sc);
+            }
+        }
+
+        /* update and draw debris */
+        for (int i = 0; i < n_debris; i++) {
+            if (debris[i].life <= 0) continue;
+            debris[i].x  += debris[i].vx;
+            debris[i].y  += debris[i].vy;
+            debris[i].vy += 0.04f;  /* gravity */
+            debris[i].life--;
+
+            /* fade: change char as life drains */
+            int li = debris[i].life;
+            char dc;
+            if (li > debris[i].maxlife * 2 / 3) dc = debris[i].ch;
+            else if (li > debris[i].maxlife / 3) dc = '.';
+            else                                  dc = '`';
+
+            /* color: starts at own stage, fades toward dim */
+            int sc = (li > debris[i].maxlife / 2) ? debris[i].stage : 1;
+
+            canvas_put((int)debris[i].x, (int)debris[i].y, dc, sc);
+        }
+
+        canvas_render(plain);
+        usleep(delay_us > 0 ? (delay_us < 30000 ? 30000 : delay_us) : 50000);
+    }
+
+    /* --- Phase 3: fallout — sparse drifting ash --- */
+    for (int f = 0; f < 20 && !g_quit; f++) {
+        /* fade all remaining debris */
+        for (int i = 0; i < n_debris; i++) {
+            if (debris[i].life <= 0) continue;
+            canvas_put((int)debris[i].x, (int)debris[i].y, ' ', 0);
+            debris[i].y  += 0.15f;
+            debris[i].x  += (float)(rand()%3 - 1) * 0.3f;
+            debris[i].life -= 2;
+            if (debris[i].life > 0)
+                canvas_put((int)debris[i].x, (int)debris[i].y, '.', 1);
+        }
+        canvas_render(plain);
+        usleep(80000);
+    }
+
+    canvas_clear();
+    canvas_render(plain);
+}
+
 /* ── Options ───────────────────────────────────────────────────────────────── */
 typedef struct {
-    int fast, delay_us, scale, rainbow, no_sparks, plain;
+    int fast, delay_us, scale, rainbow, oppenheimer, no_sparks, plain;
 } Opts;
 
 static void usage(const char *prog) {
@@ -273,22 +343,23 @@ static void usage(const char *prog) {
         "Usage: %s [OPTIONS]\n\n"
         "Draw the legendary Cool S in your terminal.\n\n"
         "Options:\n"
-        "  -f            Fast mode  (no animation)\n"
-        "  -d USECS      Per-pixel delay in microseconds (default 25000)\n"
-        "  -s SCALE      Scale factor 1-8 (default 4)\n"
-        "  -r            Rainbow finale mode\n"
-        "  --no-sparks   Disable spark particles\n"
-        "  --plain       No color output\n"
-        "  -h, --help    Show this help and exit\n\n"
+        "  -f              Fast mode (no animation)\n"
+        "  -d USECS        Per-pixel delay in microseconds (default: 25000)\n"
+        "  -s SCALE        Scale factor 1-8 (default: 3)\n"
+        "  -r              Rainbow finale\n"
+        "  -o, --oppenheimer  Detonate the S at the end\n"
+        "  --no-sparks     Disable spark particles\n"
+        "  --plain         No color output\n"
+        "  -h, --help      Show this help\n\n"
         "Examples:\n"
-        "  cool-s                 Animated at default size\n"
-        "  cool-s -f -s 6         Instant, big\n"
-        "  cool-s -d 60000 -r     Slow with rainbow finale\n"
-        "  cool-s -s 2 --plain    Small monochrome\n",
+        "  cool-s                    Animated Cool S\n"
+        "  cool-s -f -s 5            Instant, large\n"
+        "  cool-s -o                 Now I am become death\n"
+        "  cool-s -d 60000 -r        Slow with rainbow\n",
         prog);
 }
 
-/* ── Recolor entire canvas ─────────────────────────────────────────────────── */
+/* ── Recolor ───────────────────────────────────────────────────────────────── */
 static void recolor(int stage) {
     for (int y = 0; y < ch_; y++)
         for (int x = 0; x < cw; x++)
@@ -296,42 +367,44 @@ static void recolor(int stage) {
                 canvas[y][x].stage = stage;
 }
 
-/* ── Main draw ─────────────────────────────────────────────────────────────── */
+/* ── Draw the Cool S ───────────────────────────────────────────────────────── */
 static void draw_cool_s(const Opts *o) {
-    canvas_init();
+    get_term();
     canvas_clear();
 
     /*
-     * S bounding box in terminal cells:
-     *   width  = 2 * 2 * scale  (x goes 0..2, each unit = 2*scale cols)
-     *   height = 5 * scale      (y goes 0..5, each unit = scale rows)
-     * Add a small margin.
+     * Bounding box in terminal cells:
+     *   width  = 4 * scale * 2  (sq-pixel x: 0..4, each ×2 for aspect)
+     *   height = 10 * scale     (sq-pixel y: 0..10)
      */
-    int s_w = 2 * 2 * o->scale;   /* = 4*scale terminal columns */
-    int s_h = 5 * o->scale;        /* terminal rows */
+    /* auto-reduce scale if S doesn't fit the terminal */
+    int scale = o->scale;
+    while (scale > 1 && (10 * scale > ch_ - 3 || 4 * scale * 2 > cw - 4))
+        scale--;
 
-    /* Center origin: top-left corner of bounding box */
-    int ox = (cw  - s_w) / 2;
-    int oy = (ch_ - s_h) / 2;
-    if (ox < 2) ox = 2;
+    int s_w = 4 * scale * 2;
+    int s_h = 10 * scale;
+    int ox  = (cw  - s_w) / 2;
+    int oy  = (ch_ - s_h) / 2;
+    if (ox < 1) ox = 1;
     if (oy < 1) oy = 1;
 
     int delay = o->fast ? 0 : o->delay_us;
 
     for (int i = 0; i < N_SEGS && !g_quit; i++) {
-        const Seg *s = &SEGS[i];
-        draw_line(s->x0, s->y0, s->x1, s->y1,
-                  o->scale, ox, oy,
-                  s->ch, s->stage,
-                  delay, o->plain);
+        const Seg *sg = &SEGS[i];
+        draw_seg(sg->x0, sg->y0, sg->x1, sg->y1,
+                 scale, ox, oy,
+                 sg->ch, sg->stage,
+                 delay, o->plain);
 
         if (!o->no_sparks && delay > 0 && !g_quit) {
-            int ex = ox + s->x1 * 2 * o->scale;
-            int ey = oy + s->y1 * o->scale;
-            spark_emit(ex, ey, s->stage);
+            int ex = ox + sg->x1 * scale * 2;
+            int ey = oy + sg->y1 * scale;
+            spark_emit(ex, ey, sg->stage, 5);
             sparks_tick();
             canvas_render(o->plain);
-            usleep(delay * 4);
+            usleep(delay * 3);
             sparks_tick();
             canvas_render(o->plain);
             usleep(delay * 2);
@@ -340,47 +413,17 @@ static void draw_cool_s(const Opts *o) {
 
     if (g_quit) return;
 
-    /* ── Stages 6 & 7: closing diagonal connectors ─────────────────────────────
-     * Wikipedia: close-left  = (0,2)→(0.5,2.5) in Cartesian S-units
-     *            close-right = (2,3)→(1.5,2.5) in Cartesian S-units
-     * In terminal coords (y-down, each S-unit = 2*scale cols × scale rows):
-     *   close-left  '/' : from (ox,            oy+3*scale) → (ox+  scale, oy+5*scale/2)
-     *   close-right '\' : from (ox+4*scale,    oy+2*scale) → (ox+3*scale, oy+5*scale/2)
-     */
-    if (!g_quit) {
-        int s = o->scale;
-        /* left connector — '\' seals the left gap, going right+down from left bar bottom */
-        draw_px(ox,         oy + 3*s,
-                ox + s,     oy + 3*s + s/2,
-                '\\', 6, delay, o->plain);
-        if (!o->no_sparks && delay > 0 && !g_quit) {
-            spark_emit(ox + s, oy + 3*s + s/2, 6);
-            sparks_tick(); canvas_render(o->plain); usleep(delay * 3);
-        }
-        /* right connector — '/' seals the right gap, going left+down from right bar bottom */
-        draw_px(ox + 4*s,   oy + 3*s + 1,
-                ox + 3*s,   oy + 3*s + s/2,
-                '/', 7, delay, o->plain);
-        if (!o->no_sparks && delay > 0 && !g_quit) {
-            spark_emit(ox + 3*s, oy + 3*s + s/2, 7);
-            sparks_tick(); canvas_render(o->plain); usleep(delay * 3);
-        }
-    }
-
-    if (g_quit) return;
-
+    /* final colour wash */
     if (!o->fast && delay > 0) {
-        usleep(250000);
-
+        usleep(200000);
         if (o->rainbow) {
-            for (int pass = 0; pass < 8 && !g_quit; pass++) {
+            for (int p = 0; p < 8 && !g_quit; p++) {
                 for (int y = 0; y < ch_; y++)
                     for (int x = 0; x < cw; x++)
                         if (canvas[y][x].ch != ' ')
-                            canvas[y][x].stage =
-                                ((pass*2 + x/4 + y/2) % (N_COLORS-1)) + 1;
+                            canvas[y][x].stage = ((p*2+x/4+y/2) % (N_COLORS-1)) + 1;
                 canvas_render(o->plain);
-                usleep(120000);
+                usleep(110000);
             }
         }
         recolor(N_COLORS);
@@ -390,27 +433,35 @@ static void draw_cool_s(const Opts *o) {
         canvas_render(o->plain);
     }
 
-    /* tagline below the S */
-    if (!g_quit) {
-        int ty = oy + s_h + 2;
+    /* tagline */
+    if (!g_quit && !o->oppenheimer) {
         const char *tag = "~ the Cool S ~";
-        int tx = ox + (s_w - (int)strlen(tag)) / 2;
+        int tx = ox + (s_w - (int)strlen(tag)) / 2; (void)scale;
+        int ty = oy + s_h + 2;
         for (int i = 0; tag[i] && tx+i < cw-1; i++)
             canvas_put(tx+i, ty, tag[i], 4);
         canvas_render(o->plain);
+    }
+
+    /* Oppenheimer */
+    if (o->oppenheimer && !g_quit) {
+        if (!o->fast) usleep(500000);
+        oppenheimer(ox, oy, scale, o->plain, delay);
     }
 }
 
 /* ── main ──────────────────────────────────────────────────────────────────── */
 int main(int argc, char *argv[]) {
-    Opts o = { .fast=0, .delay_us=25000, .scale=4,
-               .rainbow=0, .no_sparks=0, .plain=0 };
+    Opts o = { .fast=0, .delay_us=25000, .scale=3,
+               .rainbow=0, .oppenheimer=0, .no_sparks=0, .plain=0 };
 
     for (int i = 1; i < argc; i++) {
-        if      (!strcmp(argv[i], "-f"))           o.fast = 1;
-        else if (!strcmp(argv[i], "-r"))           o.rainbow = 1;
-        else if (!strcmp(argv[i], "--no-sparks"))  o.no_sparks = 1;
-        else if (!strcmp(argv[i], "--plain"))      o.plain = 1;
+        if      (!strcmp(argv[i], "-f"))                    o.fast = 1;
+        else if (!strcmp(argv[i], "-r"))                    o.rainbow = 1;
+        else if (!strcmp(argv[i], "-o") ||
+                 !strcmp(argv[i], "--oppenheimer"))         o.oppenheimer = 1;
+        else if (!strcmp(argv[i], "--no-sparks"))           o.no_sparks = 1;
+        else if (!strcmp(argv[i], "--plain"))               o.plain = 1;
         else if (!strcmp(argv[i], "-d") && i+1 < argc) {
             o.delay_us = atoi(argv[++i]);
             if (o.delay_us < 0) o.delay_us = 0;
@@ -431,17 +482,16 @@ int main(int argc, char *argv[]) {
     atexit(cleanup);
 
     if (!o.fast) {
-        printf(CLEAR_SCREEN CURSOR_HIDE);
+        printf(CLEAR HIDE);
         fflush(stdout);
     }
 
     draw_cool_s(&o);
 
-    if (!o.fast && !g_quit) {
-        /* position prompt on the last terminal row */
-        printf("\033[%d;1H", g_rows);
+    if (!o.fast && !g_quit && !o.oppenheimer) {
+        printf("\033[%d;1H", g_trows);
         const char *msg = "[ press any key to exit ]";
-        int pad = (g_cols - (int)strlen(msg)) / 2;
+        int pad = (g_tcols - (int)strlen(msg)) / 2;
         for (int i = 0; i < pad; i++) putchar(' ');
         printf(BOLD "\033[97m%s" RESET, msg);
         fflush(stdout);
@@ -453,10 +503,9 @@ int main(int argc, char *argv[]) {
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
         getchar();
         tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-
-        printf(CLEAR_SCREEN CURSOR_HOME CURSOR_SHOW RESET);
-        fflush(stdout);
     }
 
+    printf(CLEAR HOME SHOW RESET);
+    fflush(stdout);
     return 0;
 }
