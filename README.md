@@ -2,14 +2,6 @@
 
 > *Draw the legendary Cool S in your terminal.*
 
-`cool-s` is a terminal toy in the spirit of [`sl`](https://github.com/mtoyoda/sl) —
-it animates the step-by-step construction of the **Cool S** (also called the
-Universal S, Super S, Pointy S, or Graffiti S), the graffiti symbol every
-90s kid drew on their notebook.
-# cool-s
-
-> *Draw the legendary Cool S in your terminal.*
-
 `cool-s` is a terminal toy in the spirit of [`sl`](https://github.com/mtoyoda/sl) --
 it animates the step-by-step construction of the **Cool S** (also called the
 Universal S, Super S, Pointy S, or Graffiti S), the graffiti symbol every
