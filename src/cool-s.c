@@ -205,6 +205,23 @@ static volatile int g_quit = 0;
 static void on_sigint(int s) { (void)s; g_quit = 1; }
 static void cleanup(void)    { printf(CURSOR_SHOW RESET "\n"); fflush(stdout); }
 
+
+/* ── Direct terminal-pixel Bresenham (no S-unit scaling) ──────────────────── */
+static void draw_px(int tx0, int ty0, int tx1, int ty1,
+                    char ch, int stage, int delay_us, int plain) {
+    int dx =  abs(tx1-tx0), sx = tx0<tx1 ? 1:-1;
+    int dy = -abs(ty1-ty0), sy = ty0<ty1 ? 1:-1;
+    int err = dx+dy, e2;
+    for (;;) {
+        canvas_put(tx0, ty0, ch, stage);
+        if (delay_us > 0) { canvas_render(plain); usleep(delay_us); }
+        if (tx0==tx1 && ty0==ty1) break;
+        e2 = 2*err;
+        if (e2 >= dy) { err+=dy; tx0+=sx; }
+        if (e2 <= dx) { err+=dx; ty0+=sy; }
+    }
+}
+
 /* ── Cool S geometry ───────────────────────────────────────────────────────── */
 /*
  * Canonical Wikipedia coordinates (y-up, x∈[0,2], y∈[0,5]).
@@ -241,10 +258,8 @@ static const Seg SEGS[] = {
     /* Stage 5 — bottom V */
     { 0,FLIP(1), 1,FLIP(0), '\\', 5 },
     { 2,FLIP(1), 1,FLIP(0), '/',  5 },
-    /* Stage 6 — left closing connector (vertical, left column) */
-    { 0,FLIP(2), 0,FLIP(3), '|', 6 },
-    /* Stage 7 — right closing connector (vertical, right column) */
-    { 2,FLIP(2), 2,FLIP(3), '|', 7 },
+    /* Stages 6 & 7 are drawn separately in draw_cool_s() using
+     * terminal pixel coordinates, because they span fractional S-units. */
 };
 #define N_SEGS (int)(sizeof(SEGS)/sizeof(SEGS[0]))
 
@@ -320,6 +335,35 @@ static void draw_cool_s(const Opts *o) {
             sparks_tick();
             canvas_render(o->plain);
             usleep(delay * 2);
+        }
+    }
+
+    if (g_quit) return;
+
+    /* ── Stages 6 & 7: closing diagonal connectors ─────────────────────────────
+     * Wikipedia: close-left  = (0,2)→(0.5,2.5) in Cartesian S-units
+     *            close-right = (2,3)→(1.5,2.5) in Cartesian S-units
+     * In terminal coords (y-down, each S-unit = 2*scale cols × scale rows):
+     *   close-left  '/' : from (ox,            oy+3*scale) → (ox+  scale, oy+5*scale/2)
+     *   close-right '\' : from (ox+4*scale,    oy+2*scale) → (ox+3*scale, oy+5*scale/2)
+     */
+    if (!g_quit) {
+        int s = o->scale;
+        /* left connector — '\' seals the left gap, going right+down from left bar bottom */
+        draw_px(ox,         oy + 3*s,
+                ox + s,     oy + 3*s + s/2,
+                '\\', 6, delay, o->plain);
+        if (!o->no_sparks && delay > 0 && !g_quit) {
+            spark_emit(ox + s, oy + 3*s + s/2, 6);
+            sparks_tick(); canvas_render(o->plain); usleep(delay * 3);
+        }
+        /* right connector — '/' seals the right gap, going left+down from right bar bottom */
+        draw_px(ox + 4*s,   oy + 3*s + 1,
+                ox + 3*s,   oy + 3*s + s/2,
+                '/', 7, delay, o->plain);
+        if (!o->no_sparks && delay > 0 && !g_quit) {
+            spark_emit(ox + 3*s, oy + 3*s + s/2, 7);
+            sparks_tick(); canvas_render(o->plain); usleep(delay * 3);
         }
     }
 
