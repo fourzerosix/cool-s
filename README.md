@@ -1,6 +1,8 @@
 # cool-s
 > *The most universally drawn doodle in human history. Now in your terminal.*
 
+`cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but gnarlier/cooler/fresher and certainly more dope.
+
 ```
           /\
         //  \\
@@ -24,10 +26,6 @@
         \\  //
           //
 ```
-
----
-
-`cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but gnarlier/cooler/fresher and certainly more dope.
 
 ---
 
