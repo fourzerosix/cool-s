@@ -110,7 +110,7 @@ static void canvas_render(int plain) {
 static void draw_seg(int x0, int y0, int x1, int y1,
                      int scale, int ox, int oy,
                      char ch, int stage,
-                     int delay_us, int plain) {
+                     int delay_us, int plain, int skip_last) {
     int X0 = x0 * scale, Y0 = y0 * scale;
     int X1 = x1 * scale, Y1 = y1 * scale;
 
@@ -119,10 +119,13 @@ static void draw_seg(int x0, int y0, int x1, int y1,
     int err = dx + dy, e2;
 
     for (;;) {
-        int col = ox + X0 * 2;   /* ×2 aspect correction */
-        int row = oy + Y0;
-        canvas_put(col,   row, ch, stage);
-        canvas_put(col+1, row, ch, stage); /* 1-col thickness */
+        int at_end = (X0 == X1 && Y0 == Y1);
+        if (!skip_last || !at_end) {
+            int col = ox + X0 * 2;   /* x2 aspect correction */
+            int row = oy + Y0;
+            canvas_put(col,   row, ch, stage);
+            canvas_put(col+1, row, ch, stage); /* 1-col thickness */
+        }
         if (delay_us > 0) { canvas_render(plain); usleep(delay_us); }
         if (X0 == X1 && Y0 == Y1) break;
         e2 = 2 * err;
@@ -198,10 +201,10 @@ static const Seg SEGS[] = {
     /* stage 5 — bottom V */
     { 0,8, 2,10,'\\', 5 },
     { 4,8, 2,10,'/',  5 },
-    /* stage 6 — left closing diagonal: \ from bottom of top-left-bar inward */
-    { 0,4, 1,5, '\\', 6 },
-    /* stage 7 — right closing diagonal: / from top of bottom-right-bar inward */
-    { 4,6, 3,5, '/',  7 },
+    /* stage 6 — left closing diagonal: / bridging left bar to diagonal */
+    { 0,6, 1,5, '/', 6 },
+    /* stage 7 — right closing diagonal: / bridging diagonal to right bar */
+    { 3,5, 4,4, '/', 7 },
 };
 #define N_SEGS (int)(sizeof(SEGS)/sizeof(SEGS[0]))
 
@@ -393,10 +396,11 @@ static void draw_cool_s(const Opts *o) {
 
     for (int i = 0; i < N_SEGS && !g_quit; i++) {
         const Seg *sg = &SEGS[i];
+        int skip_last = (sg->stage == 6 || sg->stage == 7) ? 1 : 0;
         draw_seg(sg->x0, sg->y0, sg->x1, sg->y1,
                  scale, ox, oy,
                  sg->ch, sg->stage,
-                 delay, o->plain);
+                 delay, o->plain, skip_last);
 
         if (!o->no_sparks && delay > 0 && !g_quit) {
             int ex = ox + sg->x1 * scale * 2;
@@ -415,20 +419,27 @@ static void draw_cool_s(const Opts *o) {
 
     /* final colour wash */
     if (!o->fast && delay > 0) {
-        usleep(200000);
-        if (o->rainbow) {
-            for (int p = 0; p < 8 && !g_quit; p++) {
+        usleep(300000);
+        /* flash to solid white */
+        recolor(N_COLORS);
+        canvas_render(o->plain);
+        usleep(400000);
+
+        if (o->rainbow && !g_quit) {
+            /* rainbow finale: cycle all lit pixels through stage colours */
+            for (int p = 0; p < 20 && !g_quit; p++) {
                 for (int y = 0; y < ch_; y++)
                     for (int x = 0; x < cw; x++)
                         if (canvas[y][x].ch != ' ')
-                            canvas[y][x].stage = ((p*2+x/4+y/2) % (N_COLORS-1)) + 1;
+                            canvas[y][x].stage = ((p + x/3 + y) % (N_COLORS-1)) + 1;
                 canvas_render(o->plain);
-                usleep(110000);
+                usleep(150000);
             }
+            /* settle back to white */
+            recolor(N_COLORS);
+            canvas_render(o->plain);
+            usleep(300000);
         }
-        recolor(N_COLORS);
-        canvas_render(o->plain);
-        usleep(200000);
     } else {
         canvas_render(o->plain);
     }
@@ -452,7 +463,7 @@ static void draw_cool_s(const Opts *o) {
 
 /* ── main ──────────────────────────────────────────────────────────────────── */
 int main(int argc, char *argv[]) {
-    Opts o = { .fast=0, .delay_us=25000, .scale=3,
+    Opts o = { .fast=0, .delay_us=40000, .scale=3,
                .rainbow=0, .oppenheimer=0, .no_sparks=0, .plain=0 };
 
     for (int i = 1; i < argc; i++) {
