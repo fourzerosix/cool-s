@@ -19,7 +19,7 @@ Universal S, Super S, Pointy S, or Graffiti S): the graffiti symbol every
   \\      \\      ||
     \\      \\   /
       \\      //
-    /    \\      //
+    /   \\      //
   ||      \\      //
   ||      ||      ||
   ||      ||      ||
