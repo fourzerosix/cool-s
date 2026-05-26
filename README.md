@@ -254,3 +254,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - [Investigating the Origins of the S, Again](https://www.vice.com/en/article/the-internet-tried-hard-to-solve-the-mystery-of-the-s/) -- VICE, 2017
 - [The Faith of Graffiti](https://en.wikipedia.org/wiki/The_Faith_of_Graffiti) -- Norman Mailer & Jon Naar, 1974
 - `sl` -- the original terminal toy this was inspired by
+
+*R.I.P. Daniel John Epeneter - Love you cuzzo!*
