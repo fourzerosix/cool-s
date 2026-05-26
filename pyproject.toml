@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cool-s"
-version = "1.0.2"
+version = "1.0.4"
 description = "Draw the legendary Cool S in your terminal"
 readme = "README.md"
 license = "MIT"
