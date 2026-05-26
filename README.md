@@ -24,7 +24,7 @@
     \\          //
       \\      //
         \\  //
-          //
+          \/
 ```
 
 ---
@@ -51,7 +51,7 @@ cool-s
 **Via Docker:**
 
 ```bash
-docker run --rm -it YOUR_DOCKERHUB_USERNAME/cool-s
+docker run --rm -it fourzerosix/cool-s
 ```
 
 ---
@@ -208,13 +208,13 @@ The pip package bundles the compiled binary for Linux x86-64 and macOS. On other
 
 ```bash
 # Interactive (recommended -- needs a TTY for ANSI animation)
-docker run --rm -it YOUR_DOCKERHUB_USERNAME/cool-s
+docker run --rm -it fourzerosix/cool-s
 
 # With flags
-docker run --rm -it YOUR_DOCKERHUB_USERNAME/cool-s cool-s -o
+docker run --rm -it fourzerosix/cool-s cool-s -o
 
 # Fast mode (works without TTY)
-docker run --rm YOUR_DOCKERHUB_USERNAME/cool-s cool-s -f --plain
+docker run --rm fourzerosix/cool-s cool-s -f --plain
 ```
 
 ---
