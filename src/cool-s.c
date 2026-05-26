@@ -1,9 +1,18 @@
 #define _GNU_SOURCE
 /*
+ * Author: Jeremy Bell a.k.a Octopus Oscillator
+ * Date: 2026-05-25
+ *
  * cool-s  --  Draw the legendary Cool S in your terminal.
  *
- * Inspired by `sl` (steam locomotive).  Animates the step-by-step
- * construction of the Cool S (Universal S / Graffiti S / Super S).
+ * "Find what you love and let it kill you. Let it drain you of your all.
+ * Let it cling onto your back and weigh you down into eventual nothingness.
+ * Let it kill you and let it devour your remains. 
+ * For all things will kill you, both slowly and fastly, but it's much better to be killed by a lover.
+ * - - Bukowski - - *
+ *
+ * Inspired by `sl` (steam locomotive).
+ * Animates the step-by-step construction of the Cool S.
  *
  * Geometry: all segments are defined in "square-pixel" coordinates
  * where x∈[0,4], y∈[0,10].  At render time each sq-pixel is scaled
