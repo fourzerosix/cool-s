@@ -1,7 +1,7 @@
 # cool-s
 > *The most universally drawn doodle in human history. Now in your terminal.*
 
-`cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but gnarlier/cooler/fresher and certainly more dope.
+`cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but gnarlier, cooler, sicker, and certainly more dope.
 
 ```
           /\
@@ -61,22 +61,22 @@ docker run --rm -it fourzerosix/cool-s
 ```
 cool-s [OPTIONS]
 
-  -f                 Fast mode - instant render/no animation - Prefontaine
+  -f                 Fast mode - instant render/no animation
   -d USECS           Per-pixel delay in microseconds (default: 40000)
   -s SCALE           Scale factor 1-8 (default: 3, auto-fits your terminal)
-  -r                 Rainbow finale (be yourself - be proud)
-  -o, --oppenheimer  Detonate the S at the end - "Now I am become death, the destroyer of S's."
+  -r                 Rainbow finale (i just want to dance)
+  -o, --oppenheimer  Detonate the S at the end
   --no-sparks        Disable spark particles (we should have also probably disabled the drink in the early 2000's) 
-  --plain            No color output (you'll enjoy plain or choose your own switch from the willow tree)
-  -h, --help         Show help and exit (in the 90s nobody really cared if you screamed "HELP" - but we do)
+  --plain            No color output (you'll enjoy plain or choose your own switch from the willow tree - this hurts me more than it hurts you)
+  -h, --help         Show help and exit (go ahead and scream - nobody is listening)
 ```
 
 ```bash
-cool-s                    # The full animated experience
-cool-s -f -s 5            # Instant - large (MURRRICA MODE)
-cool-s -o                 # Now I am become S
-cool-s -d 60000 -r        # Slow-draw with rainbow finale (like Clint Eastwood but with love)
-cool-s -s 2 --plain       # Small - monochrome - great for pipes (HEY! it's not *that* small)
+cool-s                    # buy the ticket, take the ride
+cool-s -f -s 5            # Instant/Large (MURRRICA MODE)
+cool-s -o                 # "Now I am become death, the destroyer of S's."
+cool-s -d 60000 -r        # Slow-draw with rainbow finale (like Clint Eastwood doing drag)
+cool-s -s 2 --plain       # Small - monochrome - great for pipes (HEY! it's not *that* small . . .)
 ```
 
 ---
@@ -93,30 +93,30 @@ But where did it come from? Nobody knew. Nobody *knows*. That's kind of the thin
 
 The Cool S - also known as the Universal S, the Super S, the Pointy S, and the Graffiti S - is a graffiti sign in popular culture and childlore, typically doodled on children's notebooks or graffitied on walls. It consists of exactly 14 line segments forming a stylized, pointed S-shape. It has also been compared to the infinity symbol - the S appears to have depth, where the overlap in the center and the appearance of a potential altitude change at the top and bottom make it look like it connects back to itself, whilst making the world wround you connect in a sort of ethereal way (as you listen the the self-titled Sublime album - love is, it's what we've got - remember that).
 
-Mathematically speaking, the Cool S has no reflection symmetry but has 2-fold rotational symmetry. Spin it 180 degrees and it looks identical (which is deeply satisfying and also completely useless information that you will now think about every time you draw one)
+Mathematically speaking, the Cool S has no reflection symmetry but has 2-fold rotational symmetry. Spin it 180 degrees and it looks identical (which is deeply satisfying and also completely useless information that you will now think about every time you draw one - see you in your dreams)
 
 ### The construction (the sacred recipe)
 
 This is the part that made it viral before "viral" was a word:
 
-1. Draw three short vertical bars - evenly spaced (or it's detention)
-2. Draw three more identical bars directly below - with a matching gap (a gap bigger than your momma's)
-3. Connect them with two diagonal lines - crossing left to right (Allen Iverson style, breakin' ankles)
-4. Cap the top with an inverted V (for all the haters)
+1. Draw three short vertical bars - evenly spaced (or it's detention and verbal abuse)
+2. Draw three more identical bars directly below - with a matching gap (a gap bigger than yo momma's)
+3. Connect them with two diagonal lines - crossing left to right (Allen Iverson style - breakin' ankles)
+4. Cap the top with an inverted V (for all the hAters)
 5. Cap the bottom with a V (for Vendetta)
-6. Add two short closing strokes at the middle junctions (cuz' who don't love closing strokes?)
+6. Add two short closing strokes at the middle junctions (cuz' who don't love closing strokes at the middle junction, ammirite?)
 
 That's it. That's the whole secret. Once you knew it, you couldn't stop. A professor of language and media at Middlesex University put it well when interviewed by VICE:
 
 "*It's probably a Moebius strip - it can't be drawn continuously, but it does have a perpetual flow. Most nine-year-olds can't draw, so when someone hands them a magical recipe to create something fairly cool on demand, that'll go viral.*"
 
-### The origin (nobody knows, but let's investigate anyway)
+### Origin (O.G.)
 
 The exact origin of the Cool S is unknown, but it became prevalent around the early 1980s as a part of graffiti culture. Some people report seeing it as early as the 1960s. Similar designs for the S have also been identified as early as 1890. One art history professor suggested it may have originated as a "decorated initial" in medieval scripts. So qiute possibly the Cool S may have been invented by medieval monks (NOW, that's what i call RAD).
 
 Jon Naar's photographs of graffiti in New York City, taken in 1973 and published in *The Faith of Graffiti* in 1974, frequently contain the symbol. Jean-Michel Basquiat - one of the most influential artists of the 20th century - occasionally featured it in his artworks, including *Charles the First*, and in *Untitled (Olive Oyl)* it is labelled "CLASSIC S OF GRAFF."
 
-### The childlore angle (this is actually kind of beautiful in a hiding under the mattress while the belt slaps the floor way)
+### Childlore (sweet dreams are made of these)
 
 The most compelling explanation isn't really an explanation at all - it's a classification. The Cool S is generally considered to be an artifact of childlore, meaning that it is taught by children to children over the course of generations. It spreads the same way jump-rope rhymes spread (just how your mom's legs spread 9 months before your ugly ass popped out). The same way that thing where you hold someone's wrists and spin them spread. Kid sees it, kid learns it, kid teaches it, repeat.
 
@@ -248,6 +248,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## Credits & further reading
 
 - [Cool S -- Wikipedia](https://en.wikipedia.org/wiki/Cool_S) -- the canonical reference
+- [Mobius Strip](https://en.wikipedia.org/wiki/M%C3%B6bius_strip) -- in mathematics
 - [What the Hell Was That 'S' Thing Everyone Drew in School?](https://www.vice.com/en/article/that-s-thing-everyone-drew-in-school-what-is-it/) -- VICE, 2016
 - [Meet the Guy Who Just Trademarked 'The S Thing'](https://www.vice.com/en/article/meet-the-guy-who-just-trademarked-the-s-thing-cool-s-pointy-s-stussy-s/) -- VICE, 2020
 - [Investigating the Origins of the S, Again](https://www.vice.com/en/article/the-internet-tried-hard-to-solve-the-mystery-of-the-s/) -- VICE, 2017
