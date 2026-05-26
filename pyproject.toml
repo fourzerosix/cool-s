@@ -7,14 +7,13 @@ name = "cool-s"
 version = "4.0.6"
 description = "Draw the legendary Cool S in your terminal"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.8"
 keywords = ["terminal", "toy", "cool-s", "graffiti", "ascii", "animation", "cli", "fun"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
@@ -32,7 +31,6 @@ Wikipedia = "https://en.wikipedia.org/wiki/Cool_S"
 cool-s = "cool_s:main"
 
 [tool.setuptools.packages.find]
-where = ["python"]
 include = ["cool_s*"]
 
 [tool.setuptools.package-data]
