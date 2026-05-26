@@ -69,8 +69,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/cool-s:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/cool-s:${{ steps.meta.outputs.VERSION }}
+            ${{ secrets.fourzerosix }}/cool-s:latest
+            ${{ secrets.fourzerosix }}/cool-s:${{ steps.meta.outputs.VERSION }}
 
   # ── GitHub Release (with tarball) ──────────────────────────────────────────
   github-release:
