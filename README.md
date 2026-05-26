@@ -30,7 +30,7 @@
 ---
 
 ## Install in 30 seconds
-*Just like the blue-box macaroni we were all fed that's probably still clogging our arteries. . .*
+*Just like the blue-box macaroni that's probably still clogging our arteries. . .while you wait for DOOM to load.*
 
 **From source (Linux / macOS / WSL):**
 
@@ -61,7 +61,7 @@ docker run --rm -it fourzerosix/cool-s
 ```
 cool-s [OPTIONS]
 
-  -f                 Fast mode - instant render/no animation
+  -f                 Fast mode - instant render/no animation - Prefontaine
   -d USECS           Per-pixel delay in microseconds (default: 40000)
   -s SCALE           Scale factor 1-8 (default: 3, auto-fits your terminal)
   -r                 Rainbow finale (be yourself - be proud)
@@ -81,7 +81,7 @@ cool-s -s 2 --plain       # Small - monochrome - great for pipes (HEY! it's not 
 
 ---
 
-## The Lore (a 90s kid's deep-dive)
+## The Lore (a 90s kid deep-dive)
 
 If you grew up in the 80s or 90s, you know the S. You didn't learn it in class. You didn't read it in a book. Some kid - maybe on the bus, maybe at lunch, maybe during a math test you were definitely failing - leaned over and showed you six lines, then connected them. Then added a pointy top and a pointy bottom. Suddenly, you had the coolest thing your pen had ever made.
 
