@@ -7,7 +7,7 @@ name = "cool-s"
 version = "1.0.4"
 description = "Draw the legendary Cool S in your terminal"
 readme = "README.md"
-license = "MIT"
+license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.8"
 keywords = ["terminal", "toy", "cool-s", "graffiti", "ascii", "animation", "cli", "fun"]
 classifiers = [
