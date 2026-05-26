@@ -5,7 +5,7 @@ Thank you for wanting to make the Cool S even cooler!
 ## Development Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/cool-s.git
+git clone https://github.com/fourzerosix/cool-s.git
 cd cool-s
 make
 ./cool-s
@@ -38,3 +38,4 @@ make check
 - Color themes (`--theme matrix`, `--theme fire`, etc.)
 - Multiple S's scrolling across the screen (the true `sl` homage)
 - Windows native (cmd.exe / PowerShell) support
+- Fractals/Flair/FINISH HIM!
