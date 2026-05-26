@@ -1,15 +1,28 @@
 #define _GNU_SOURCE
 /*
- * Author: Jeremy Bell a.k.a Octopus Oscillator
- * Date: 2026-05-25
  *
- * cool-s  --  Draw the legendary Cool S in your terminal.
+ * cool-s - Draw the legendary Cool S in your terminal
+ *
+ * Copyright (C) 2026 Jeremy Bell
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * "Find what you love and let it kill you. Let it drain you of your all.
- * Let it cling onto your back and weigh you down into eventual nothingness.
- * Let it kill you and let it devour your remains. 
- * For all things will kill you, both slowly and fastly, but it's much better to be killed by a lover.
- * - - Bukowski - - *
+ *  Let it cling onto your back and weigh you down into eventual nothingness.
+ *  Let it kill you and let it devour your remains. 
+ *  For all things will kill you, both slowly and fastly, but it's much better to be killed by a lover."
+ *  - Bukowski
  *
  * Inspired by `sl` (steam locomotive).
  * Animates the step-by-step construction of the Cool S.
@@ -19,11 +32,11 @@
  * by `scale`, then x is doubled (×2) to compensate for the ~2:1
  * terminal character aspect ratio, giving clean 45-degree diagonals.
  *
- *   sq-pixel → terminal:  col = sq_x * scale * 2
+ *   sq-pixel -> terminal:  col = sq_x * scale * 2
  *                          row = sq_y * scale
  *
  * Build:   gcc -O2 -o cool-s src/cool-s.c -lm
- * Usage:   cool-s [-f] [-d USECS] [-s SCALE] [-r] [-o] [--no-sparks] [--plain] [-h]
+ * Usage:   cool-s [-f] [-d USECS] [-s SCALE] [-r] [-o] [--no-sparks] [--plain] [-o] [--oppenheimer] [-h]
  */
 
 #include <stdio.h>
