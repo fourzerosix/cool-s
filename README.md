@@ -1,6 +1,8 @@
 # cool-s
 > *The most universally drawn doodle in human history. Now in your terminal.*
 
+---
+
 - Pretty Doc: https://fourzerosix.github.io/cool-s/
 - PyPi:       https://pypi.org/project/cool-s/
 - Docker:     https://hub.docker.com/r/fourzerosix/cool-s
