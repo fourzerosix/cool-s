@@ -2,8 +2,8 @@
 > *The most universally drawn doodle in human history. Now in your terminal.*
 
 - Pretty Doc: https://fourzerosix.github.io/cool-s/
-- PyPi: https://pypi.org/project/cool-s/
-- Docker: https://hub.docker.com/r/fourzerosix/cool-s
+- PyPi:       https://pypi.org/project/cool-s/
+- Docker:     https://hub.docker.com/r/fourzerosix/cool-s
 
 `cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but cooler, sicker, gnarlier, doper, and certainly more rad.
 
