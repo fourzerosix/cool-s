@@ -5,6 +5,8 @@
 - PyPi:       https://pypi.org/project/cool-s/
 - Docker:     https://hub.docker.com/r/fourzerosix/cool-s
 
+---
+
 `cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but cooler, sicker, gnarlier, doper, and certainly more rad.
 
 ```
