@@ -1,7 +1,7 @@
 # cool-s
 > *The most universally drawn doodle in human history. Now in your terminal.*
 
-`cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but gnarlier, cooler, sicker, and certainly more dope.
+`cool-s` draws the legendary **Cool S** stroke by stroke - in glorious ANSI color - *right in your terminal*. Like `sl` but cooler, sicker, gnarlier, doper, and certainly more rad.
 
 ```
           /\
@@ -112,7 +112,7 @@ That's it. That's the whole secret. Once you knew it, you couldn't stop. A profe
 
 ### Origin (O.G.)
 
-The exact origin of the Cool S is unknown, but it became prevalent around the early 1980s as a part of graffiti culture. Some people report seeing it as early as the 1960s. Similar designs for the S have also been identified as early as 1890. One art history professor suggested it may have originated as a "decorated initial" in medieval scripts. So qiute possibly the Cool S may have been invented by medieval monks (NOW, that's what i call RAD).
+The exact origin of the Cool S is unknown, but it became prevalent around the early 1980s as a part of graffiti culture. Some people report seeing it as early as the 1960s. Similar designs for the S have also been identified as early as 1890. One art history professor suggested it may have originated as a "decorated initial" in medieval scripts. So qiute possibly the Cool S may have been invented by medieval monks (NOW, that's what I call RAD).
 
 Jon Naar's photographs of graffiti in New York City, taken in 1973 and published in *The Faith of Graffiti* in 1974, frequently contain the symbol. Jean-Michel Basquiat - one of the most influential artists of the 20th century - occasionally featured it in his artworks, including *Charles the First*, and in *Untitled (Olive Oyl)* it is labelled "CLASSIC S OF GRAFF."
 
@@ -120,7 +120,7 @@ Jon Naar's photographs of graffiti in New York City, taken in 1973 and published
 
 The most compelling explanation isn't really an explanation at all - it's a classification. The Cool S is generally considered to be an artifact of childlore, meaning that it is taught by children to children over the course of generations. It spreads the same way jump-rope rhymes spread (just how your mom's legs spread 9 months before your ugly ass popped out). The same way that thing where you hold someone's wrists and spin them spread. Kid sees it, kid learns it, kid teaches it, repeat.
 
-A 2022 Atlantic article on childlore noted that kids have been passing down games, rhymes, and legends this way since forever - and that the Cool S is one of the purest modern examples of the form. No adult invented it (no such thing as adults). No corporation owns it (*well...*). No one put it in a textbook. It just *exists*, flowing from kid to kid like a slightly more geometric version of cooties or alcoholism.
+A 2022 Atlantic article on childlore noted that kids have been passing down games, rhymes, and legends this way since forever - and that the Cool S is one of the purest modern examples of the form. No adult invented it (no such thing as adults). No corporation owns it (*well...*). No one put it in a textbook. It just *exists*, flowing from kid to kid like a slightly more geometric version of cooties or bags of the devil's lettuce.
 
 ### The terminal dimension
 
