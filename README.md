@@ -263,4 +263,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - [The Faith of Graffiti](https://en.wikipedia.org/wiki/The_Faith_of_Graffiti) -- Norman Mailer & Jon Naar, 1974
 - `sl` -- the original terminal toy this was inspired by
 
-*R.I.P. Daniel John Epeneter - Love you cuzzo!*
+> *R.I.P. Daniel John Epeneter - Love you cuzzo!*
