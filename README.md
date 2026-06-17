@@ -59,7 +59,7 @@ cool-s
 **Via Docker:**
 
 ```bash
-docker run --rm -it fourzerosix/cool-s
+apptainer run docker://fourzerosix/cool-s
 ```
 
 ---
